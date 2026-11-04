@@ -1,14 +1,25 @@
 const mongoose = require('mongoose');
 
+let isConnected = false;
+
 const connectDB = async () => {
+  if (isConnected && mongoose.connection.readyState === 1) {
+    return;
+  }
+
+  if (!process.env.MONGO_URL) {
+    throw new Error('MONGO_URL is not defined in environment variables');
+  }
+
   try {
-    await mongoose.connect(process.env.MONGO_URL, {
-      serverSelectionTimeoutMS: 30000,
+    const db = await mongoose.connect(process.env.MONGO_URL, {
+      serverSelectionTimeoutMS: 10000,
     });
-    console.log('✅ Database Connected Successfully');
+    isConnected = db.connections[0].readyState === 1;
+    console.log('✅ Connected to MongoDB Atlas');
   } catch (error) {
-    console.log('❌ Database Connection Failed:', error.message);
-    process.exit(1);
+    console.error('❌ MongoDB Connection Error:', error.message);
+    throw error;
   }
 };
 

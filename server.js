@@ -6,13 +6,24 @@ const designRoutes = require('./routes/designRoutes');
 
 const app = express();
 
-// Connect to MongoDB Atlas
-connectDB();
-
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Ensure DB connection before handling requests
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('Database connection error:', err.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Database connection error: ' + err.message,
+    });
+  }
+});
 
 // Health check route
 app.get('/', (req, res) => {
